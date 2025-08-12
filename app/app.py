@@ -1,40 +1,66 @@
 import streamlit as st
+import matplotlib.pyplot as plt
+from PIL import Image
 from model import compute_similarity
 from preprocessing import preprocess
 from utils import extract_text
 
+st.set_page_config(
+    page_title="Assistant IA de Présélection de CV",
+    page_icon="🧠",
+    layout="centered",
+)
 st.title("🧠 Assistant IA de Présélection de CV")
+st.markdown(
+    """
+    Bienvenue dans l’assistant IA qui compare automatiquement les **CVs** à votre **offre d’emploi**  
+    et calcule un **score de pertinence** pour vous aider à présélectionner les meilleurs profils.
+    """
+)
 
-job_offer = st.text_area("📄 Offre d’emploi :", height=200)
+st.divider() 
+job_offer = st.text_area(
+    "📄 **Offre d’emploi :**",
+    placeholder="Collez ici la description complète du poste...",
+    height=200
+)
 
-uploaded_files = st.file_uploader("📂 Importer les CVs ", type="pdf", accept_multiple_files=True)
+uploaded_files = st.file_uploader(
+    "📂 **Importer les CVs (PDF)**",
+    type=["pdf", "doc"],
+    accept_multiple_files=True,
+    help="Vous pouvez importer plusieurs CVs à la fois"
+)
 
-if st.button("Lancer l’analyse"):
+if st.button("🚀 Lancer l’analyse", type="primary"):
     if not job_offer or not uploaded_files:
-        st.warning("Merci d’ajouter une offre d’emploi et des CVs.")
+        st.warning("⚠️ Merci d’ajouter **une offre d’emploi** et au moins **un CV**.")
     else:
-        st.info("🔄 Traitement en cours...")
+        with st.spinner("🔄 Analyse en cours..."):
+            # Prétraitement de l'offre
+            job_processed = preprocess(job_offer)
 
-        # Prétraitement de l'offre
-        job_processed = preprocess(job_offer)
+            cv_texts, filenames = [], []
+            for file in uploaded_files:
+                text = extract_text(file)
+                processed = preprocess(text)
+                cv_texts.append(processed)
+                filenames.append(file.name)
 
-        cv_texts = []
-        filenames = []
+            scores = compute_similarity(cv_texts, job_processed)
 
-        for file in uploaded_files:
-            text = extract_text(file)
-            processed = preprocess(text)
-            cv_texts.append(processed)
-            filenames.append(file.name)
+            # Fusion nom + score, tri décroissant
+            results = sorted(zip(filenames, scores), key=lambda x: x[1], reverse=True)
+        st.success("✅ **Résultats de l’analyse :**")
 
-        # Calcul des similarités
-        scores = compute_similarity(cv_texts, job_processed)
-
-        # Fusion nom de fichier + score et tri décroissant
-        results = sorted(zip(filenames, scores), key=lambda x: x[1], reverse=True)
-
-        # Affichage
-        st.success("✅ Résultats :")
         for filename, score in results:
             pourcentage = score * 100
-            st.write(f"📁 {filename} — Pertinence : `{pourcentage:.2f}%`")
+            st.markdown(
+                f"📁 **{filename}** — Pertinence : `{pourcentage:.2f}%`"
+            )
+
+        fig, ax = plt.subplots()
+        ax.barh([r[0] for r in results], [r[1] * 100 for r in results], color="#4CAF50")
+        ax.set_xlabel("Score de pertinence (%)")
+        ax.set_title("Comparaison des CVs")
+        st.pyplot(fig)

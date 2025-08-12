@@ -1,7 +1,8 @@
 
 import docx2txt
 import PyPDF2
-
+from PIL import Image
+import pytesseract
 def extract_text_from_pdf(uploaded_file):
     text = ""
     reader = PyPDF2.PdfReader(uploaded_file)  # Pas besoin de open()
@@ -19,5 +20,6 @@ def extract_text(file):
         return extract_text_from_pdf(file)
     elif filename.endswith('.docx') or filename.endswith('.doc'):
         return extract_text_from_docs(file)
+  
     else:
         return "Format non pris en charge"
