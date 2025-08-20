@@ -1,8 +1,8 @@
 
 import docx2txt
 import PyPDF2
-from PIL import Image
-import pytesseract
+import re
+
 def extract_text_from_pdf(uploaded_file):
     text = ""
     reader = PyPDF2.PdfReader(uploaded_file)  # Pas besoin de open()
@@ -23,3 +23,57 @@ def extract_text(file):
   
     else:
         return "Format non pris en charge"
+
+def extract_basic_info(text):
+    email = re.findall(r'\S+@\S+', text)
+    phone = re.findall(r'\+?\d[\d\s]{6,}\d', text)
+    name = text.strip().split("\n")[0] if text.strip() else "N/A"
+
+    # Capture complète de la section COMPETENCES
+    skills_match = re.search(
+        r'COMP[ÉE]TENCES\s*(.*?)(?:\n[A-ZÉÈÊÂÎÔÙÛÇ ]{3,}\n|$)', 
+        text,  re.DOTALL
+    )
+    projects_match = re.search(
+        r'PROJETS\s*(.*?)(?:\n[A-ZÉÈÊÂÎÔÙÛÇ ]{3,}\n|$)', 
+        text,  re.DOTALL
+    )
+    project_text = projects_match.group(1).strip() if projects_match else ""
+    skills_text = skills_match.group(1).strip() if skills_match else ""
+    return {
+        "name": name,
+        "email": email[0] if email else "N/A",
+        "mobile_number": phone[0] if phone else "N/A",
+        "skills": skills_text,
+        "projects": project_text
+    }
+
+def extract_skills(text, skills_list):
+    skills_found = []
+    text_lower = text.lower()
+    for skill in skills_list:
+        if skill.lower().strip() in text_lower:
+            skills_found.append(skill.strip())
+    return skills_found
+def extract_Projet(skill, text):
+    """
+    Retourne la liste des projets associés à une compétence donnée.
+    Gère les CV sans section PROJETS et les majuscules/minuscules.
+    """
+    parsed = extract_basic_info(text)  # Récupère le dictionnaire du CV
+    projet_list = []
+
+    projects_text = parsed.get("projects", "")
+    if not projects_text:
+        return projet_list  # Aucun projet trouvé
+
+    # On sépare les projets par virgule et on nettoie les espaces
+    all_projects = [p.strip() for p in projects_text.split(",") if p.strip()]
+
+    # On filtre les projets contenant la compétence
+    for proj in all_projects:
+        if skill.lower() in proj.lower():
+            projet_list.append(proj)
+
+    return projet_list
+
