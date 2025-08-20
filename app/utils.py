@@ -56,21 +56,13 @@ def extract_skills(text, skills_list):
             skills_found.append(skill.strip())
     return skills_found
 def extract_Projet(skill, text):
-    """
-    Retourne la liste des projets associés à une compétence donnée.
-    Gère les CV sans section PROJETS et les majuscules/minuscules.
-    """
-    parsed = extract_basic_info(text)  # Récupère le dictionnaire du CV
+    parsed = extract_basic_info(text) 
     projet_list = []
 
     projects_text = parsed.get("projects", "")
     if not projects_text:
-        return projet_list  # Aucun projet trouvé
-
-    # On sépare les projets par virgule et on nettoie les espaces
+        return projet_list  
     all_projects = [p.strip() for p in projects_text.split(",") if p.strip()]
-
-    # On filtre les projets contenant la compétence
     for proj in all_projects:
         if skill.lower() in proj.lower():
             projet_list.append(proj)

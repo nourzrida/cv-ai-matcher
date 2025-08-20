@@ -3,9 +3,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 import shutil
+
 from model import compute_similarity
 from preprocessing import preprocess
-from utils import extract_Projet, extract_basic_info, extract_text, extract_skills
+from utils import extract_basic_info, extract_text, extract_skills, extract_Projet
 
 # 🔹 Page config
 st.set_page_config(page_title="Assistant IA de Présélection de CV",
@@ -75,14 +76,24 @@ if st.button("Lancer l’analyse"):
             skills_block = parsed.get("skills","")
             found_skills = extract_skills(skills_block, user_skills_list)
             skills_similarity = len(found_skills)/len(user_skills_list) if user_skills_list else 0
-            
+
+            # ✅ Ajout tooltip avec projets
+            colored_skills = []
+            for skill in user_skills_list:
+                if skill in found_skills:
+                    projects_for_skill = extract_Projet(skill, text)
+                    tooltip_text = ", ".join(projects_for_skill) if projects_for_skill else "Aucun projet lié"
+                    colored_skills.append(
+                        f'<span class="badge" title="{tooltip_text}">{skill}</span>'
+                    )
+
             st.markdown(f"<div class='card'><h3>{file_to_name[filename]}</h3>"
                         f"<p>Email: {parsed.get('email','N/A')} | Téléphone: {parsed.get('mobile_number','N/A')}</p>"
                         f"<p>Score global: {round(score*100,2)}%</p>"
                         f"<div class='progress-bar' style='width:{round(score*100,2)}%'></div>"
                         f"<p>Score compétences: {round(skills_similarity*100,2)}%</p>"
                         f"<div class='progress-bar' style='width:{round(skills_similarity*100,2)}%'></div>"
-                        f"<p>Compétences correspondantes: {' '.join([f'<span class=\"badge\">{s}</span>' for s in found_skills])}</p>"
+                        f"<p>Compétences correspondantes: {' '.join(colored_skills)}</p>"
                         f"</div>", unsafe_allow_html=True)
 
         # 🔹 Diagrammes côte à côte
