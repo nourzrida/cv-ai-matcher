@@ -28,18 +28,22 @@ def extract_basic_info(text):
     email = re.findall(r'\S+@\S+', text)
     phone = re.findall(r'\+?\d[\d\s]{6,}\d', text)
     name = text.strip().split("\n")[0] if text.strip() else "N/A"
-
-    # Capture complète de la section COMPETENCES
     skills_match = re.search(
         r'COMP[ÉE]TENCES\s*(.*?)(?:\n[A-ZÉÈÊÂÎÔÙÛÇ ]{3,}\n|$)', 
         text,  re.DOTALL
     )
+    
     projects_match = re.search(
-        r'PROJETS\s*(.*?)(?:\n[A-ZÉÈÊÂÎÔÙÛÇ ]{3,}\n|$)', 
+        r'(PROJETS|EXPÉRIENCES ACADÉMIQUES)\s*(.*?)(?:\n[A-ZÉÈÊÂÎÔÙÛÇ ]{3,}\n|$)', 
         text,  re.DOTALL
     )
-    project_text = projects_match.group(1).strip() if projects_match else ""
+    project_text = projects_match.group(2).strip() if projects_match else ""
     skills_text = skills_match.group(1).strip() if skills_match else ""
+    skills_list = []
+    for line in skills_text.split("\n"):
+        clean_skill = re.sub(r'^[\-\*\•\s]+', '', line).strip()  # supprime puces/tirets
+        if clean_skill:
+            skills_list.append(clean_skill)
     return {
         "name": name,
         "email": email[0] if email else "N/A",
@@ -51,7 +55,7 @@ def extract_basic_info(text):
 def extract_skills(text, skills_list):
     skills_found = []
     text_lower = text.lower()
-    for skill in skills_list:
+    for skill in skills_list :
         if skill.lower().strip() in text_lower:
             skills_found.append(skill.strip())
     return skills_found

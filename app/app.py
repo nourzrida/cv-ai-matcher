@@ -25,10 +25,11 @@ h2, h3, h4 { color: #5d4037; }
 .badge { display:inline-block; padding:4px 8px; margin:2px; border-radius:8px; background-color:#d7ccc8; color:#3e2723; font-size:12px;}
 </style>
 """, unsafe_allow_html=True)
+col1, col2 = st.columns([1, 4])  
 
-# 🔹 Titre
+# 🔹 Header avec logo coloré et titre dans la même card
 st.markdown("<div class='card'><h1>Assistant IA de Présélection de CV</h1></div>", unsafe_allow_html=True)
-st.markdown("Analysez automatiquement les **CVs** par rapport à votre **offre d'emploi** et obtenez un **score de pertinence**.")
+st.markdown( "<h6 style='text-align:center;'>" "Analysez automatiquement les CVs par rapport à votre <b>offre d'emploi" "et obtenez un <b>score de pertinence." "</h6>", unsafe_allow_html=True )
 
 st.divider()
 
@@ -102,7 +103,7 @@ if st.button("Lancer l’analyse"):
         with col1:
             labels = [file_to_name[r[0]] for r in results]
             values = [round(r[1]*100,2) for r in results]
-            fig, ax = plt.subplots(figsize=(5, max(3, len(labels)*0.4)))
+            fig, ax = plt.subplots(figsize=(10, max(5, len(labels)*0.4)))
             ax.barh(labels, values, color='#bcaaa4')
             ax.set_xlabel("Score (%)", fontsize=10, color="#5d4037")
             ax.set_title("Comparaison des CVs", fontsize=12, color="#3e2723")
@@ -119,8 +120,9 @@ if st.button("Lancer l’analyse"):
             if all_found_skills:
                 skills_count = pd.Series(all_found_skills).value_counts()
                 fig2, ax2 = plt.subplots(figsize=(5,5))
+                nude_colors = ['#fefaf7', '#fffaf7', '#d7ccc8', '#bcaaa4', '#8d6e63', '#a1887f', '#ffecb3', '#ffe0b2']
                 ax2.pie(skills_count.values, labels=skills_count.index, autopct='%1.1f%%',
-                        colors=plt.cm.Pastel1.colors, textprops={'fontsize':9})
+                 colors=nude_colors[:len(skills_count)],   textprops={'fontsize':9, 'color':'#5d4037'} )
                 ax2.set_title("Répartition des compétences", fontsize=12)
                 st.pyplot(fig2, use_container_width=True)
 
